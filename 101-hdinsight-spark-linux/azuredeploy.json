@@ -70,11 +70,14 @@
       ],
       "tags": {},
       "properties": {
-        "clusterVersion": "3.6",
+        "clusterVersion": "4.0",
         "osType": "Linux",
         "tier": "Standard",
         "clusterDefinition": {
           "kind": "spark",
+          "componentVersion": {
+             "Spark": "2.4"
+          },
           "configurations": {
             "gateway": {
               "restAuthCredential.isEnabled": true,
