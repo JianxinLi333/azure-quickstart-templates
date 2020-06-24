@@ -3,22 +3,22 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "clusterName": {
-      "value": "tgjhdsp421220f"
+      "value": "spark24test-jessie"
     },
     "clusterLoginUserName": {
-      "value": "azureuser"
+      "value": "admin"
     },
     "clusterLoginPassword": {
-      "value": "Kyligence@2019"
+      "value": "Oe.201920192019"
     },
     "containerName": {
-      "value": "tgjhdsp421220fco"
+      "value": "spark24test-jessie-container"
     },
     "sqlvirtualMachinesname": {
-      "value": "tgjhdsp421220fsql"
+      "value": "li.jianxin@MicrosoftInternal.partner.onmschina.cn"
     },
     "databaseName": {
-      "value": "tgjhdsp421220fdb"
+      "value": "SQlDB1"
     },
     "workerNodeSize": {
       "value": "Standard_D4_V2"
@@ -27,10 +27,10 @@
       "value": "Standard_D4_V2"
     },
     "metastoreName": {
-      "value": "tgjhdsp421220f"
+      "value": "spark24test-jessie"
     },
     "clusterWorkerNodeCount": {
-      "value": 3
+      "value": 1
     },
     "clusterType": {
       "value": "spark"
@@ -42,25 +42,25 @@
       "value": "azureuser"
     },
     "sshPassword": {
-      "value": ""
+      "value": "Oe.201920192019"
     },
     "vnetName": {
-      "value": "vnettgjhdsp421220f"
+      "value": "vnet-spark24test-jessie"
     },
     "subnet1Name": {
-      "value": "subnet1tgjhdsp421220f"
+      "value": "subnet-1"
     },
     "storageAccount1": {
-      "value": "tgjhdsp421220fsa"
+      "value": "storage-spark24test-jessie"
     },
     "sqlUsername": {
-      "value": "kylin"
+      "value": "userdb"
     },
     "sqlPassword": {
       "value": "P@ssw0rd!..."
     },
     "identifier":{
-      "value": "tgjhdsp421220f"
+      "value": "spark24test-jessie"
     }
   }
 }
