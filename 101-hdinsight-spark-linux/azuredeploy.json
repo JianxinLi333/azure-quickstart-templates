@@ -1,11 +1,23 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-  "contentVersion": "1.0.0.0",
+  "contentVersion": "single_hdi_1.0",
   "parameters": {
     "clusterName": {
       "type": "string",
       "metadata": {
         "description": "The name of the HDInsight cluster to create."
+      }
+    },
+    "identifier":{
+      "type": "string",
+      "metadata":{
+        "description": "the identifier of the cluster"
+      }
+    },
+    "storageAccount1": {
+      "type": "string",
+      "metadata": {
+      "description": "The name of StorageAccount1."
       }
     },
     "clusterLoginUserName": {
@@ -21,6 +33,57 @@
         "description": "The password must be at least 10 characters in length and must contain at least one digit, one non-alphanumeric character, and one upper or lower case letter."
       }
     },
+    "sqlvirtualMachinesname": {
+      "defaultValue": "sqltest",
+      "type": "String"
+    },
+    "containerName": {
+      "type": "string",
+      "metadata": {
+        "description": "Specify container name."
+      }
+    },
+    "clusterVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "The version of HDI."
+      },
+      "defaultValue": "3.6"
+    },
+    "clusterWorkerNodeCount": {
+      "type": "int",
+      "defaultValue": 4,
+      "metadata": {
+        "description": "The number of nodes in the HDInsight cluster."
+      }
+    },
+    "clusterType": {
+      "type": "string",
+      "defaultValue": "hbase",
+      "allowedValues": [
+        "hadoop",
+        "hbase",
+        "storm",
+        "spark"
+      ],
+      "metadata": {
+        "description": "The type of the HDInsight cluster to create."
+      }
+    },
+    "workerNodeSize": {
+      "type": "string",
+      "metadata": {
+        "description": "Size of the worker node that hosts the application"
+      },
+      "defaultValue": "Standard_D3"
+    },
+    "headNodeSize": {
+      "type": "string",
+      "metadata": {
+        "description": "Size of the head node that hosts the application"
+      },
+      "defaultValue": "Standard_D3"
+    },
     "sshUserName": {
       "type": "string",
       "defaultValue": "sshuser",
@@ -34,75 +97,134 @@
         "description": "The password must be at least 10 characters in length and must contain at least one digit, one non-alphanumeric character, and one upper or lower case letter."
       }
     },
-    "location": {
+    "sqlUsername": {
       "type": "string",
-      "defaultValue": "[resourceGroup().location]",
+      "defaultValue": "",
       "metadata": {
-        "description": "Location for all resources."
+        "description": "sql username for hive metastore"
+      }
+    },
+    "sqlPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "sql password for hive metastore"
+      }
+    },
+    "vnetName": {
+      "defaultValue": "sqltest",
+      "type": "String"
+    },
+    "subnet1Name": {
+      "defaultValue": "subnet120170503000000",
+      "type": "String"
+    },
+    "metastoreName": {
+      "type": "string",
+      "defaultValue": "kylin_default_instance",
+      "metadata": {
+        "description": "The name of metadata store for KAP"
+      }
+    },
+    "databaseName": {
+      "type": "string",
+      "metadata": {
+        "description": "Putting database name."
       }
     }
   },
   "variables": {
-    "defaultStorageAccount": {
-      "name": "[uniqueString(resourceGroup().id)]",
-      "type": "Standard_LRS"
+    "defaultApiVersion": "2015-05-01-preview",
+    "clusterApiVersion": "2015-03-01-preview",
+    "clusterStorageAccountName": "[parameters('storageAccount1')]",
+    "applicationName": "KE",
+    "galleryPackageIdentity": "Kyligence",
+    "sqlDatabase": {
+      "databaseName": "[parameters('databaseName')]",
+      "serverName": "[parameters('sqlvirtualMachinesname')]"
     }
   },
   "resources": [
     {
-      "type": "Microsoft.Storage/storageAccounts",
-      "name": "[variables('defaultStorageAccount').name]",
-      "location": "[parameters('location')]",
-      "apiVersion": "2016-01-01",
-      "sku": {
-        "name": "[variables('defaultStorageAccount').type]"
-      },
-      "kind": "Storage",
-      "properties": {}
-    },
-    {
-      "type": "Microsoft.HDInsight/clusters",
+      "apiVersion": "[variables('clusterApiVersion')]",
       "name": "[parameters('clusterName')]",
-      "location": "[parameters('location')]",
-      "apiVersion": "2018-06-01-preview",
-      "dependsOn": [
-        "[concat('Microsoft.Storage/storageAccounts/',variables('defaultStorageAccount').name)]"
-      ],
-      "tags": {},
+      "type": "Microsoft.HDInsight/clusters",
+      "location": "[resourceGroup().location]",
       "properties": {
-        "clusterVersion": "4.0",
+        "clusterVersion": "[parameters('clusterVersion')]",
         "osType": "Linux",
-        "tier": "Standard",
+        "tier": "standard",
         "clusterDefinition": {
-          "kind": "spark",
-          "componentVersion": {
-             "Spark": "2.4"
-          },
+          "kind": "[parameters('clusterType')]",
+          "componentVersion": {"SPARK": "2.4"},
           "configurations": {
             "gateway": {
               "restAuthCredential.isEnabled": true,
               "restAuthCredential.username": "[parameters('clusterLoginUserName')]",
               "restAuthCredential.password": "[parameters('clusterLoginPassword')]"
+            },
+            "yarn-site":{
+              "yarn.acl.enable": "true",
+              "yarn.resourcemanager.scheduler.class": "org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler"
+            },
+            "hive-site": {
+              "javax.jdo.option.ConnectionDriverName": "com.microsoft.sqlserver.jdbc.SQLServerDriver",
+              "javax.jdo.option.ConnectionURL": "[concat('jdbc:sqlserver://', variables('sqlDatabase').serverName, '.database.chinacloudapi.cn', ';databaseName=', variables('sqlDatabase').databaseName, ';')]",
+              "javax.jdo.option.ConnectionUserName": "[concat(parameters('sqlUsername'), '@', variables('sqlDatabase').serverName)]",
+              "javax.jdo.option.ConnectionPassword": "[parameters('sqlPassword')]"
+            },
+            "hive-env": {
+              "hive_database": "Existing MSSQL Server database with SQL authentication",
+              "hive_database_name": "[variables('sqlDatabase').databaseName]",
+              "hive_database_type": "mssql",
+              "hive_existing_mssql_server_database": "[variables('sqlDatabase').databaseName]",
+              "hive_existing_mssql_server_host": "[concat(variables('sqlDatabase').serverName, '.database.chinacloudapi.cn')]",
+              "hive_hostname": "[concat(variables('sqlDatabase').serverName, '.database.chinacloudapi.cn')]"
+            },
+            "capacity-scheduler":{
+              "yarn.scheduler.capacity.maximum-am-resource-percent": "0.5",
+              "yarn.scheduler.capacity.resource-calculator": "org.apache.hadoop.yarn.util.resource.DominantResourceCalculator",
+              "yarn.scheduler.capacity.root.queues": "default,build,query",
+              "yarn.scheduler.capacity.root.default.capacity": "10",
+              "yarn.scheduler.capacity.root.default.user-limit-factor": "9",
+              "yarn.scheduler.capacity.root.default.maximum-capacity": "90",
+              "yarn.scheduler.capacity.root.default.state": "RUNNING",
+              "yarn.scheduler.capacity.root.default.acl_submit_applications": "",
+              "yarn.scheduler.capacity.root.query.capacity": "60",
+              "yarn.scheduler.capacity.root.query.user-limit-factor": "2",
+              "yarn.scheduler.capacity.root.query.maximum-capacity": "100",
+              "yarn.scheduler.capacity.root.query.state": "RUNNING",
+              "yarn.scheduler.capacity.root.query.acl_submit_applications": "",
+              "yarn.scheduler.capacity.root.build.capacity": "30",
+              "yarn.scheduler.capacity.root.build.user-limit-factor": "5",
+              "yarn.scheduler.capacity.root.build.maximum-capacity": "90",
+              "yarn.scheduler.capacity.root.build.state": "RUNNING",
+              "yarn.scheduler.capacity.root.build.acl_submit_applications": ""
+            },
+            "tez-site":{
+              "tez.queue.name": "default"
             }
           }
         },
         "storageProfile": {
           "storageaccounts": [
             {
-              "name": "[replace(replace(reference(resourceId('Microsoft.Storage/storageAccounts', variables('defaultStorageAccount').name), '2016-01-01').primaryEndpoints.blob,'https://',''),'/','')]",
+              "name": "[concat(parameters('storageAccount1'),'.blob.core.chinacloudapi.cn')]",
               "isDefault": true,
-              "container": "[parameters('clusterName')]",
-              "key": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('defaultStorageAccount').name), '2016-01-01').keys[0].value]"
+              "container": "[parameters('containerName')]",
+              "key": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccount1')), variables('defaultApiVersion')).key1]"
             }
+
+            
           ]
         },
         "computeProfile": {
           "roles": [
             {
               "name": "headnode",
+              "minInstanceCount": 1,
               "targetInstanceCount": 2,
               "hardwareProfile": {
-                "vmSize": "Standard_D12_v2"
+                "vmSize": "[parameters('headNodeSize')]"
               },
               "osProfile": {
                 "linuxOperatingSystemProfile": {
@@ -110,14 +232,18 @@
                   "password": "[parameters('sshPassword')]"
                 }
               },
-              "virtualNetworkProfile": null,
+              "virtualNetworkProfile": {
+                "id": "[concat(resourceGroup().id,'/providers/Microsoft.Network/virtualNetworks/',parameters('vnetName'))]",
+                "subnet": "[concat(resourceGroup().id,'/providers/Microsoft.Network/virtualNetworks/',parameters('vnetName'),'/subnets/',parameters('subnet1Name'))]"
+              },
               "scriptActions": []
             },
             {
               "name": "workernode",
-              "targetInstanceCount": 2,
+              "minInstanceCount": 1,
+              "targetInstanceCount": "[parameters('clusterWorkerNodeCount')]",
               "hardwareProfile": {
-                "vmSize": "Standard_D13_v2"
+                "vmSize": "[parameters('workerNodeSize')]"
               },
               "osProfile": {
                 "linuxOperatingSystemProfile": {
@@ -125,7 +251,10 @@
                   "password": "[parameters('sshPassword')]"
                 }
               },
-              "virtualNetworkProfile": null,
+              "virtualNetworkProfile": {
+                "id": "[concat(resourceGroup().id,'/providers/Microsoft.Network/virtualNetworks/',parameters('vnetName'))]",
+                "subnet": "[concat(resourceGroup().id,'/providers/Microsoft.Network/virtualNetworks/',parameters('vnetName'),'/subnets/',parameters('subnet1Name'))]"
+              },
               "scriptActions": []
             }
           ]
@@ -134,10 +263,6 @@
     }
   ],
   "outputs": {
-    "storage": {
-      "type": "object",
-      "value": "[reference(resourceId('Microsoft.Storage/storageAccounts', variables('defaultStorageAccount').name))]"
-    },
     "cluster": {
       "type": "object",
       "value": "[reference(resourceId('Microsoft.HDInsight/clusters',parameters('clusterName')))]"
