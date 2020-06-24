@@ -1,21 +1,66 @@
 {
-    "$schema":"https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
-    "contentVersion":"1.0.0.0",
-    "parameters":{
-        "clusterName":{
-            "value":"GEN-UNIQUE"
-        },
-        "clusterLoginUserName":{
-            "value":"GEN-UNIQUE"
-        },
-        "clusterLoginPassword":{
-            "value":"GEN-PASSWORD"
-        },
-        "sshUserName":{
-            "value":"GEN-UNIQUE"
-        },
-        "sshPassword":{
-            "value":"GEN-PASSWORD"
-        }
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "clusterName": {
+      "value": "tgjhdsp421220f"
+    },
+    "clusterLoginUserName": {
+      "value": "azureuser"
+    },
+    "clusterLoginPassword": {
+      "value": "Kyligence@2019"
+    },
+    "containerName": {
+      "value": "tgjhdsp421220fco"
+    },
+    "sqlvirtualMachinesname": {
+      "value": "tgjhdsp421220fsql"
+    },
+    "databaseName": {
+      "value": "tgjhdsp421220fdb"
+    },
+    "workerNodeSize": {
+      "value": "Standard_D4_V2"
+    },
+    "headNodeSize": {
+      "value": "Standard_D4_V2"
+    },
+    "metastoreName": {
+      "value": "tgjhdsp421220f"
+    },
+    "clusterWorkerNodeCount": {
+      "value": 3
+    },
+    "clusterType": {
+      "value": "spark"
+    },
+    "clusterVersion": {
+      "value": "4.0"
+    },
+    "sshUserName": {
+      "value": "azureuser"
+    },
+    "sshPassword": {
+      "value": ""
+    },
+    "vnetName": {
+      "value": "vnettgjhdsp421220f"
+    },
+    "subnet1Name": {
+      "value": "subnet1tgjhdsp421220f"
+    },
+    "storageAccount1": {
+      "value": "tgjhdsp421220fsa"
+    },
+    "sqlUsername": {
+      "value": "kylin"
+    },
+    "sqlPassword": {
+      "value": "P@ssw0rd!..."
+    },
+    "identifier":{
+      "value": "tgjhdsp421220f"
     }
+  }
 }
